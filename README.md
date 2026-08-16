@@ -18,22 +18,6 @@ the spirit of the responsible-use notices on offense-side research repos like
 It is a signal for the developer integrating it, not end-user-facing warning
 copy — nothing here is shown to a chat user by default.
 
-## Why "Janus"
-
-Janus is the two-faced Roman god of thresholds and transitions — he looks
-backward and forward at once. That's exactly what this library does: it
-looks back at prior refused turns in a conversation and forward at
-escalation and topic drift, standing at the threshold of whether a
-conversation should be flagged.
-
-## Package name
-
-Checked in order of preference: `janus` (taken — an unrelated async
-queue library on PyPI), `janus-guard` (taken — an existing, unrelated LLM
-agent tool-call policy enforcement package), `pyjanus-guard` (**available on
-both PyPI and GitHub as of 2026-08-15 — this is the name used**), `llm-janus`
-(also available, second choice). Verified via the PyPI JSON API and the
-GitHub repository search API before deciding.
 
 ## Install
 
