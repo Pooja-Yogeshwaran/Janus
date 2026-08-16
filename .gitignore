@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.coverage
+build/
+dist/
+.venv/
+venv/
+
+# secrets -- never committed
+.env
+.env.*
+
+# third-party dataset content -- never bundled, see DATASETS.md
+eval/data/
+eval/results/*.json
+
+# eval-iteration dev cache -- embeddings cache + raw MHJ CSV cache
+# (CC-BY-NC-4.0 content, never committed). See eval/embedding_cache.py.
+eval/.cache/
+
+# results table + chart PNG referenced from README ARE committed, not ignored
+!eval/results/benchmark_results.md
+!eval/results/risk_over_time.png
+!eval/results/mhj_benchmark_results.md
+!eval/results/mhj_risk_over_time.png

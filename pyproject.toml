@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyjanus-guard"
+version = "0.1.0"
+description = "Detects multi-turn LLM jailbreak patterns (foot-in-the-door, crescendo, chain-of-attack) in conversation transcripts."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "The pyjanus-guard Authors" }]
+keywords = [
+    "llm",
+    "jailbreak",
+    "safety",
+    "guardrails",
+    "prompt-injection",
+    "ai-safety",
+    "moderation",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+# Core library is dependency-light by design: pure standard library.
+# No API keys, no paid services, no ML dependencies required to run the default heuristics.
+dependencies = []
+
+[project.optional-dependencies]
+# Only needed to run eval/ against public benchmark datasets.
+eval = [
+    "datasets>=2.19",
+    "matplotlib>=3.8",
+    "scikit-learn>=1.3",
+]
+# Optional real semantic embeddings (topic_drift, step_size,
+# reformulation_after_refusal, anchoring, convergence_to_target). Auto-picked
+# up by JanusConfig() if installed -- see pyjanus_guard/config.py
+# _resolve_default_embed_fn. Pulls in torch/transformers/scikit-learn/scipy
+# transitively (Apache-2.0/BSD-3-Clause, all MIT-compatible, verified before
+# adding this) -- a genuinely heavy chain, which is exactly why it's opt-in:
+# the core library and this extras group's absence change nothing about the
+# zero-dependency default behavior.
+embeddings = [
+    "sentence-transformers>=2.2",
+]
+langchain = [
+    "langchain-core>=0.2",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+
+[project.scripts]
+janus = "pyjanus_guard.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/pyjanus-guard/pyjanus-guard"
+Issues = "https://github.com/pyjanus-guard/pyjanus-guard/issues"
+
+[tool.setuptools.packages.find]
+include = ["pyjanus_guard*"]
