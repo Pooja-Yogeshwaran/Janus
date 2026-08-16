@@ -18,6 +18,11 @@ the spirit of the responsible-use notices on offense-side research repos like
 It is a signal for the developer integrating it, not end-user-facing warning
 copy — nothing here is shown to a chat user by default.
 
+*New to jailbreak detection or ML-evaluation terminology? Every term used
+below — FITD, precision/recall, held-out, embedding, and the rest — is
+defined in plain English in the [Glossary](#glossary) at the end of this
+README.*
+
 ## How to use this
 
 **Janus is a signal, not a gate.** Feed `risk_score` and `flags` into your
@@ -642,3 +647,108 @@ dataset's real license.
 pip install -e ".[dev]"
 pytest
 ```
+
+## Glossary
+
+Plain-English definitions for the terms used throughout this README — no
+prior background in jailbreak research or ML evaluation assumed.
+
+**The attack pattern this tool looks for**
+
+- **Jailbreak** — getting an AI system to do or say something it's designed
+  to refuse, by working around its guardrails rather than disabling them.
+- **Multi-turn attack** — a jailbreak attempt spread across several messages
+  in a conversation, instead of one single "bad" prompt. Harder to catch
+  because no single message looks obviously dangerous on its own.
+- **Refusal** — a turn where the assistant declines the request ("I can't
+  help with that").
+- **Reformulation** — the attacker rephrasing or softening a request after
+  being refused, aiming at the same underlying goal in different words.
+- **Escalation** — the attacker's requests gradually intensifying over
+  several turns instead of asking for the harmful thing directly.
+- **FITD (Foot-In-The-Door)** — start with a small, reasonable-sounding ask,
+  then use the assistant's earlier cooperation to push toward a bigger one.
+- **Crescendo** — escalate gradually and subtly enough that no single turn
+  looks like an attack, only the trend across many turns does.
+- **Chain-of-Attack (CoA)** — combine several individual jailbreak tricks
+  (e.g. a fictional-persona framing plus a code-completion request) in one
+  conversation.
+- **Persona injection / "DAN-style"** — asking the assistant to roleplay as
+  a character or alter-ego with no restrictions, to try to bypass its normal
+  behavior. "DAN" ("Do Anything Now") is a well-known example from this
+  category.
+
+**Reading a `RiskResult`**
+
+- **`risk_score`** — a single number from 0 to 1 summarizing how attack-like
+  a conversation looks so far; higher means more concerning.
+- **`verdict`** — a plain-English label derived from `risk_score`: `clear`,
+  `watch`, or `likely_attack`.
+- **`flagged`** — a yes/no shortcut (`risk_score` above a configurable line)
+  for `if result.flagged: do_something()`-style code.
+- **`Flag`** — a record that one specific feature (see below) fired on one
+  specific turn, with a human-readable reason attached.
+- **`turn_scores`** — the running `risk_score` after each message, useful
+  for plotting how a conversation's risk changed over time.
+- **Feature** — one independent signal/check (e.g. "does this look like a
+  refusal," "is instruction density unusually high"). Janus combines 15 of
+  them; see [Features](#features).
+- **Aggregator / aggregate score** — the step that combines every feature's
+  individual score into the single overall `risk_score`, using a weighted
+  average (see [Aggregation](#aggregation)).
+- **Weight** — how much influence one feature has on the aggregate score
+  relative to the others; configurable per feature.
+- **`flag_threshold`** — the score a single feature needs to reach before it
+  emits its own `Flag`, separate from the aggregate `flagged` cutoff.
+- **Watchlist** (`escalation_watchlist` feature) — a running list of turns
+  that showed at least mild concern, checked against as the conversation
+  continues, so a pattern doesn't need one dramatic turn to be noticed.
+- **Batch vs. incremental scoring** — batch scores a whole finished
+  transcript at once; incremental scores one new message at a time as a live
+  chat happens. Janus guarantees both give identical results.
+- **`prior_branches`** — earlier versions of messages a user has since
+  edited away, passed in separately so Janus can still see them.
+
+**Evaluating how well a detector works**
+
+- **Precision** — of everything Janus flagged, what fraction were real
+  attacks? High precision means few false alarms.
+- **Recall** — of all the real attacks that existed, what fraction did
+  Janus catch? High recall means few attacks slip through.
+- **F1 (F1 score)** — a single number balancing precision and recall
+  (specifically their harmonic mean), used to compare configurations at a
+  glance.
+- **FPR (false-positive rate)** — of everything that was actually benign,
+  what fraction got incorrectly flagged? The false-alarm rate.
+- **Held-out (data)** — data set aside and never looked at while building or
+  tuning the detector, then used exactly once at the end to check how well
+  it generalizes. The most trustworthy kind of result in this README.
+- **Train/test split** — dividing labeled data into one part used to fit
+  settings (train) and a separate part used only to measure the final result
+  (test), so the measurement isn't flattered by fitting to the same data.
+- **Cross-validation (CV)** — repeatedly splitting the training data itself
+  into smaller pieces to sanity-check a choice (like a threshold) before
+  ever touching the real held-out test data.
+- **Standalone (per-feature) vs. aggregate** — "standalone" asks "how good
+  is this one feature alone, as if it were the whole detector?"; "aggregate"
+  is the actual combined `risk_score` all features produce together.
+- **Directional (result)** — a result worth noting as a rough signal, but
+  not rigorous enough (usually because of a small or non-held-out dataset)
+  to treat as a precise, final number.
+
+**Configuration terms**
+
+- **Embedding** — a way of turning text into a list of numbers (a vector)
+  such that similar-meaning text ends up with similar numbers, which is what
+  lets Janus measure "how alike are these two messages" instead of just
+  "do they share the exact same words." See [Embeddings](#embeddings).
+- **`embed_fn`** — the pluggable function Janus calls to produce an
+  embedding; swappable for a different model or provider.
+- **Pluggable callable** (e.g. `refusal_judge`, `escalation_judge`) — an
+  optional function you can supply to override or extend Janus's built-in
+  logic for one specific decision, such as using a real LLM instead of a
+  regex heuristic to judge whether a reply was a refusal.
+- **`prompt_only_config()`** — a ready-made configuration for callers who
+  only ever see the attacker's side of a conversation, not the assistant's
+  replies (see [Real attack data: MHJ results](#real-attack-data-mhj-results)
+  for why that matters).
