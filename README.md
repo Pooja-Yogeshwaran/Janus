@@ -650,8 +650,6 @@ pytest
 
 ## Glossary
 
-Plain-English definitions for the terms used throughout this README — no
-prior background in jailbreak research or ML evaluation assumed.
 
 **The attack pattern this tool looks for**
 
